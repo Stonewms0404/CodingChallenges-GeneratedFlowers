@@ -1,0 +1,46 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct FlowerStruct
+{
+    float2 pos;
+    float petalWidth, petalCount, amplitude;
+    int petalPoints;
+};
+struct Position
+{
+    float x, y;
+};
+
+
+RWStructuredBuffer<FlowerStruct> flowers;
+RWStructuredBuffer<Position> pointPos[];
+float resolution;
+
+Position CalculatePoint(int i, FlowerStruct flower)
+{
+    float progress = (float) i / (flower.petalPoints - 1);
+    float theta = lerp(0, (2 * 3.14159265), progress);
+    float r = sin(flower.petalCount * theta) * flower.amplitude;
+    float x = r * cos(theta);
+    float y = r * sin(theta);
+   
+    Position pos;
+    pos.x = x + flower.pos.x;
+    pos.y = y + flower.pos.y;
+    return pos;
+}
+
+
+[numthreads(16, 1, 1)]
+void CSMain(uint2 id : SV_DispatchThreadID)
+{
+    FlowerStruct flower = flowers[id.x];
+    Position points[];
+    
+    for (int i = 0; i < flower.petalPoints; i++)
+        points[i] = CalculatePoint(i, flower);
+    
+    flowers[id.x] = flower;
+    pointPos[id.x] = points;
+}

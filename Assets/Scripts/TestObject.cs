@@ -13,6 +13,7 @@ public class TestObject : MonoBehaviour
     {
         int flowerCount = 8;
         SO.numOfFlowers = flowerCount;
+        SO.computeShader = shader;
 
         SO.petals = new LineRenderer[flowerCount];
         SO.flowers = new FlowerStruct[flowerCount];
@@ -25,7 +26,7 @@ public class TestObject : MonoBehaviour
             {
                 petalCount = FlowerStruct.GetPetalCount(),
                 amplitude = UnityEngine.Random.Range(0.25f, 1.25f),
-                petalPoints = 252,
+                petalPoints = 1000,
                 pos = position
             };
             flower.petalWidth = flower.amplitude * 0.2f;
@@ -33,31 +34,19 @@ public class TestObject : MonoBehaviour
             GameObject Petals = new("Petals");
             Petals.AddComponent<LayoutElement>().layoutPriority = 2;
             Petals.transform.SetParent(transform);
+            Petals.AddComponent<LineRenderer>();
 
-            SO.petals[i] = Petals.AddComponent<LineRenderer>();
+            SO.petals[i] = Petals.GetComponent<LineRenderer>();
             SO.petals[i].material = new(Shader.Find("Unlit/Color"));
             SO.petals[i].material.SetColor("_Color", Random.ColorHSV());
 
             SO.flowers[i] = flower;
         }
-        SO.bytesForShader = GetFlowerByteSize();
     }
 
     void Update()
     { 
-        Draw.SinePetal(SO, shader);
+        Draw.SinePetal(SO);
     }
 
-    private int GetFlowerByteSize()
-    {
-        int size = 0;
-
-        int floatSize = sizeof(float) * 3;
-        int vector2Size = sizeof(float) * 2;
-        int intSize = sizeof(int);
-
-        size = floatSize + vector2Size + intSize;
-
-        return size;
-    }
 }

@@ -6,6 +6,8 @@ public class ShaderMemoryInformationScriptableObject : ScriptableObject
 {
     public int bytesForShader, numOfFlowers;
 
+    public ComputeShader computeShader;
+
     public FlowerStruct[] flowers;
     public LineRenderer[] petals, stems;
 }

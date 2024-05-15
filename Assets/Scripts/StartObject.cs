@@ -5,9 +5,16 @@ using UnityEngine.UIElements;
 
 public class StartObject : MonoBehaviour
 {
-    [SerializeField] ComputeShader computeShader;
-    [SerializeField] ShaderMemoryInformationScriptableObject shaderInfo;
+    /*GameObject obj;
+    [SerializeField] int points;
+    [SerializeField] float width, amplitude = 1, frequency = 1;
+    [SerializeField] Vector2 pos;
 
+    private void Update()
+    {
+        if (obj != null) Destroy(obj);
+        obj = Create.Sine(pos, (int)points, width, new(Shader.Find("Unlit/Color")), amplitude, frequency);
+    }*/
     void Awake()
     {
         System.Random rand = new();

@@ -12,15 +12,12 @@ public class StartObject : MonoBehaviour
     {
         System.Random rand = new();
         int flowerCount = rand.Next(15, 40);
-        shaderInfo.numOfFlowers = flowerCount;
 
         GameObject flowerContainer = new("FlowerContainer");
 
         for (int i = 0; i < flowerCount; i++)
         {
-            InitializeFlower flower = new GameObject("Flower " + (i + 1)).AddComponent<InitializeFlower>();
-            flower.transform.SetParent(flowerContainer.transform);
-            flower.OnStartFlower(shaderInfo, computeShader);
+            new GameObject("Flower " + (i + 1)).AddComponent<InitializeFlower>().transform.SetParent(flowerContainer.transform);
         }
 
 

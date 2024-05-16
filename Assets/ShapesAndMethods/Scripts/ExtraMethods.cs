@@ -307,9 +307,7 @@ public static class Draw
     public static void SinePetal(ShaderMemoryInformationScriptableObject shaderInfo)
     {
         string kernelName = "DrawPetals";
-        Debug.Log("Kernel Name: " + kernelName);
         int kernelIndex = shaderInfo.computeShader.FindKernel(kernelName);
-        Debug.Log("Kernel Index: " + kernelIndex);
         shaderInfo.computeShader.GetKernelThreadGroupSizes(kernelIndex, out uint threadx, out uint thready, out uint threadz);
         ComputeBuffer pointsBuffer = null;
 
@@ -325,10 +323,9 @@ public static class Draw
             shaderInfo.computeShader.SetFloat("amplitude", shaderInfo.flowers[iter].amplitude);
             shaderInfo.computeShader.SetFloat("petalCount", shaderInfo.flowers[iter].petalCount);
             shaderInfo.computeShader.SetInt("petalPoints", shaderInfo.flowers[iter].petalPoints);
-            shaderInfo.computeShader.SetInt("selection", 1);
             shaderInfo.computeShader.SetBuffer(kernelIndex, "pointPos", pointsBuffer);
 
-            shaderInfo.computeShader.Dispatch(kernelIndex, (int)threadx, (int)thready, (int)threadz);
+            shaderInfo.computeShader.Dispatch(kernelIndex, Mathf.CeilToInt((float)points.Length / threadx), (int)thready, (int)threadz);
 
             pointsBuffer.GetData(points);
 
@@ -338,10 +335,8 @@ public static class Draw
             {
                 shaderInfo.petals[iter].SetPosition(j, new(points[j].x, points[j].y));
             }
-
+            pointsBuffer?.Release();
         }
-        
-        pointsBuffer?.Dispose();
     }
     public static void SinePetal(ComputeShader computeShader, LineRenderer renderer, Vector2 pos, int petalPoints, float amplitude = 1.0f, float petalCount = 1.0f)
     {
@@ -349,10 +344,9 @@ public static class Draw
         int kernelIndex = computeShader.FindKernel(kernelName);
         computeShader.GetKernelThreadGroupSizes(kernelIndex, out uint threadx, out uint thready, out uint threadz);
 
-        Vector2[] points = new Vector2[petalPoints];
+        Vector3[] points = new Vector3[petalPoints];
 
-        ComputeBuffer pointsBuffer = new(points.Length, sizeof(float) * 2);
-        pointsBuffer.SetData(points);
+        ComputeBuffer pointsBuffer = new(points.Length, sizeof(float) * 3);
 
         computeShader.SetFloat("posX", pos.x);
         computeShader.SetFloat("posY", pos.y);
@@ -366,13 +360,9 @@ public static class Draw
         pointsBuffer.GetData(points);
 
         renderer.positionCount = petalPoints;
+        renderer.SetPositions(points);
 
-        for (int j = 0; j < points.Length; j++)
-        {
-            renderer.SetPosition(j, new(points[j].x, points[j].y));
-        }
-
-        pointsBuffer.Dispose();
+        pointsBuffer.Release();
     }
 }
 
@@ -417,7 +407,7 @@ public static class Animation
 public struct FlowerStruct
 {
     public Vector2 pos;
-    public float petalWidth, petalCount,  amplitude;
+    public float petalWidth, petalCount, maxPetals,  amplitude;
     public int petalPoints;
     public static int GetPetalCount()
     {

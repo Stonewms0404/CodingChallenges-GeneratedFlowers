@@ -3,7 +3,7 @@
 
 RWStructuredBuffer<float2> pointPos;
 float posX, posY, petalCount, amplitude;
-int petalPoints, selection;
+int petalPoints;
 
 float lerp(float a, float b, float t)
 {
@@ -24,36 +24,12 @@ void Petals(uint index)
     pointPos[index] = pos;
 }
 
-void Point()
-{
-    
-}
-
-void Line()
-{
-    
-}
-
 [numthreads(32, 32, 1)]
 void DrawPetals(uint3 id : SV_DispatchThreadID)
 {
-    
-    switch (selection)
+    uint index = id.x;
+    if (index < petalPoints)
     {
-        case 1:
-            uint index = id.x;
-            if (index < petalPoints)
-            {
-                Petals(index);
-            }
-            break;
-        case 2:
-            Point();
-            break;
-        case 3:
-            Line();
-            break;
+        Petals(index);
     }
-    
-    
 }

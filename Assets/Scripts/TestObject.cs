@@ -9,30 +9,10 @@ public class TestObject : MonoBehaviour
     public ShaderMemoryInformationScriptableObject SO;
     public ComputeShader shader;
 
-    private void awake()
-    {
-        LineRenderer renderer = new GameObject().AddComponent<LineRenderer>();
-        renderer.material = new Material(Shader.Find("Unlit/Color"));
-        renderer.material.SetColor("_Color", Random.ColorHSV());
-        renderer.startWidth = 0.2f;
-        renderer.endWidth = 0.2f;
-        RunShader(renderer);
-    }
-
-    void RunShader(LineRenderer renderer)
-    {
-        Draw.SinePetal(shader, renderer, new(0, 0), 1000, 1, 10);
-    }
-
-    public struct VecMatPair
-    {
-        public Vector3 pos;
-        public Matrix4x4 mat;
-    }
-
+    float maxPetals;
     void Start()
     {
-        int flowerCount = 8;
+        int flowerCount = Random.Range(8, 50);
         SO.numOfFlowers = flowerCount;
         SO.computeShader = shader;
 
@@ -45,7 +25,7 @@ public class TestObject : MonoBehaviour
             Vector2 position = new(UnityEngine.Random.Range(-6.0f, 6), UnityEngine.Random.Range(-4.0f, 4));
             FlowerStruct flower = new()
             {
-                petalCount = FlowerStruct.GetPetalCount(),
+                maxPetals = FlowerStruct.GetPetalCount(),
                 amplitude = UnityEngine.Random.Range(0.25f, 1.25f),
                 petalPoints = 1000,
                 pos = position
@@ -57,7 +37,7 @@ public class TestObject : MonoBehaviour
             Petals.AddComponent<LayoutElement>().layoutPriority = 2;
             Petals.transform.SetParent(transform);
             LineRenderer renderer = Petals.AddComponent<LineRenderer>();
-            renderer.material = new(Shader.Find("Lit/Color"));
+            renderer.material = new(Shader.Find("Unlit/Color"));
             renderer.material.SetColor("_Color", Random.ColorHSV());
             renderer.startWidth = SO.flowers[i].petalWidth;
             renderer.endWidth = SO.flowers[i].petalWidth;
@@ -69,6 +49,11 @@ public class TestObject : MonoBehaviour
 
     void Update()
     { 
+        for (int i = 0; i < FlowerStruct.GetPetalCount(); i++)
+        {
+            SO.flowers[i].petalCount = Mathf.Lerp(SO.flowers[i].petalCount, SO.flowers[i].maxPetals, Time.deltaTime);
+            Debug.Log(SO.flowers[i].petalCount);
+        }
         Draw.SinePetal(SO);
     }
 

@@ -9,6 +9,27 @@ public class TestObject : MonoBehaviour
     public ShaderMemoryInformationScriptableObject SO;
     public ComputeShader shader;
 
+    private void awake()
+    {
+        LineRenderer renderer = new GameObject().AddComponent<LineRenderer>();
+        renderer.material = new Material(Shader.Find("Unlit/Color"));
+        renderer.material.SetColor("_Color", Random.ColorHSV());
+        renderer.startWidth = 0.2f;
+        renderer.endWidth = 0.2f;
+        RunShader(renderer);
+    }
+
+    void RunShader(LineRenderer renderer)
+    {
+        Draw.SinePetal(shader, renderer, new(0, 0), 1000, 1, 10);
+    }
+
+    public struct VecMatPair
+    {
+        public Vector3 pos;
+        public Matrix4x4 mat;
+    }
+
     void Start()
     {
         int flowerCount = 8;
@@ -30,17 +51,19 @@ public class TestObject : MonoBehaviour
                 pos = position
             };
             flower.petalWidth = flower.amplitude * 0.2f;
+            SO.flowers[i] = flower;
 
             GameObject Petals = new("Petals");
             Petals.AddComponent<LayoutElement>().layoutPriority = 2;
             Petals.transform.SetParent(transform);
-            Petals.AddComponent<LineRenderer>();
+            LineRenderer renderer = Petals.AddComponent<LineRenderer>();
+            renderer.material = new(Shader.Find("Lit/Color"));
+            renderer.material.SetColor("_Color", Random.ColorHSV());
+            renderer.startWidth = SO.flowers[i].petalWidth;
+            renderer.endWidth = SO.flowers[i].petalWidth;
 
             SO.petals[i] = Petals.GetComponent<LineRenderer>();
-            SO.petals[i].material = new(Shader.Find("Unlit/Color"));
-            SO.petals[i].material.SetColor("_Color", Random.ColorHSV());
 
-            SO.flowers[i] = flower;
         }
     }
 

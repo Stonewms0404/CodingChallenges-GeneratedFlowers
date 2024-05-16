@@ -311,23 +311,21 @@ public static class Draw
         int kernelIndex = shaderInfo.computeShader.FindKernel(kernelName);
         Debug.Log("Kernel Index: " + kernelIndex);
         shaderInfo.computeShader.GetKernelThreadGroupSizes(kernelIndex, out uint threadx, out uint thready, out uint threadz);
+        ComputeBuffer pointsBuffer = null;
 
         for (int iter = 0; iter < shaderInfo.numOfFlowers; iter++)
         {
             Vector2[] points = new Vector2[shaderInfo.flowers[iter].petalPoints];
 
-            int pointsBytes = sizeof(float) * 5;
-            pointsBytes += sizeof(int);
-
-            ComputeBuffer pointsBuffer = new(points.Length, pointsBytes);
+            pointsBuffer = new(points.Length, sizeof(float) * 2);
             pointsBuffer.SetData(points);
 
             shaderInfo.computeShader.SetFloat("posX", shaderInfo.flowers[iter].pos.x);
             shaderInfo.computeShader.SetFloat("posY", shaderInfo.flowers[iter].pos.y);
             shaderInfo.computeShader.SetFloat("amplitude", shaderInfo.flowers[iter].amplitude);
-            shaderInfo.computeShader.SetFloat("petalWidth", shaderInfo.flowers[iter].petalWidth);
             shaderInfo.computeShader.SetFloat("petalCount", shaderInfo.flowers[iter].petalCount);
             shaderInfo.computeShader.SetInt("petalPoints", shaderInfo.flowers[iter].petalPoints);
+            shaderInfo.computeShader.SetInt("selection", 1);
             shaderInfo.computeShader.SetBuffer(kernelIndex, "pointPos", pointsBuffer);
 
             shaderInfo.computeShader.Dispatch(kernelIndex, (int)threadx, (int)thready, (int)threadz);
@@ -341,9 +339,40 @@ public static class Draw
                 shaderInfo.petals[iter].SetPosition(j, new(points[j].x, points[j].y));
             }
 
-            pointsBuffer.Dispose();
         }
         
+        pointsBuffer?.Dispose();
+    }
+    public static void SinePetal(ComputeShader computeShader, LineRenderer renderer, Vector2 pos, int petalPoints, float amplitude = 1.0f, float petalCount = 1.0f)
+    {
+        string kernelName = "DrawPetals";
+        int kernelIndex = computeShader.FindKernel(kernelName);
+        computeShader.GetKernelThreadGroupSizes(kernelIndex, out uint threadx, out uint thready, out uint threadz);
+
+        Vector2[] points = new Vector2[petalPoints];
+
+        ComputeBuffer pointsBuffer = new(points.Length, sizeof(float) * 2);
+        pointsBuffer.SetData(points);
+
+        computeShader.SetFloat("posX", pos.x);
+        computeShader.SetFloat("posY", pos.y);
+        computeShader.SetFloat("amplitude", amplitude);
+        computeShader.SetFloat("petalCount", petalCount);
+        computeShader.SetInt("petalPoints", petalPoints);
+        computeShader.SetBuffer(kernelIndex, "pointPos", pointsBuffer);
+
+        computeShader.Dispatch(kernelIndex, (int)threadx, (int)thready, (int)threadz);
+
+        pointsBuffer.GetData(points);
+
+        renderer.positionCount = petalPoints;
+
+        for (int j = 0; j < points.Length; j++)
+        {
+            renderer.SetPosition(j, new(points[j].x, points[j].y));
+        }
+
+        pointsBuffer.Dispose();
     }
 }
 

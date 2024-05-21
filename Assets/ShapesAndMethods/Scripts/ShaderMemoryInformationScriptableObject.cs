@@ -5,6 +5,7 @@ using UnityEngine;
 public class ShaderMemoryInformationScriptableObject : ScriptableObject
 {
     public int bytesForShader, numOfFlowers;
+    public float windSpeed;
 
     public ComputeShader computeShader;
 

@@ -122,6 +122,23 @@ public static class ExtraMethods
             }
         }
     }
+
+    public static Vector3 RandomVector3()
+    {
+        return new Vector3(UnityEngine.Random.Range(-6f,6), UnityEngine.Random.Range(-6f, 6), UnityEngine.Random.Range(-6f, 6));
+    }
+    public static Vector3 RandomVector3(float min, float max)
+    {
+        return new Vector3(UnityEngine.Random.Range(min, max), UnityEngine.Random.Range(min, max), UnityEngine.Random.Range(min, max));
+    }
+    public static Vector2 RandomVector2()
+    {
+        return new Vector2(UnityEngine.Random.Range(-6f, 6), UnityEngine.Random.Range(-6f, 6));
+    }
+    public static Vector2 RandomVector2(float x, float y)
+    {
+        return new Vector2(UnityEngine.Random.Range(-x, x), UnityEngine.Random.Range(-y, y));
+    }
 }
 
 public static class Create
@@ -154,7 +171,7 @@ public static class Create
         return renderer;
     }
 
-    public static GameObject Line(Vector3 begPoint, Vector3 endPoint, float width, Material mat)
+    public static LineRenderer Line(Vector3 begPoint, Vector3 endPoint, float width, Material mat)
     {
         GameObject line = new("LineObject");
         LineRenderer renderer = line.AddComponent<LineRenderer>();
@@ -166,7 +183,7 @@ public static class Create
         Vector3[] points = { begPoint, endPoint };
         renderer.SetPositions(points);
 
-        return line;
+        return renderer;
     }
     public static GameObject Line(Vector3 begPoint, Vector3 endPoint, float startWidth, float endWidth, Material mat)
     {
@@ -313,10 +330,14 @@ public static class Draw
 
         for (int iter = 0; iter < shaderInfo.numOfFlowers; iter++)
         {
-            Vector2[] points = new Vector2[shaderInfo.flowers[iter].petalPoints];
+            int petalPoints = shaderInfo.flowers[iter].petalPoints;
+            if (pointsBuffer == null || pointsBuffer.count < petalPoints)
+            {
+                pointsBuffer?.Release(); // Release the existing buffer if it exists
+                pointsBuffer = new ComputeBuffer(petalPoints, sizeof(float) * 3);
+            }
 
-            pointsBuffer = new(points.Length, sizeof(float) * 2);
-            pointsBuffer.SetData(points);
+            Vector3[] points = new Vector3[petalPoints];
 
             shaderInfo.computeShader.SetFloat("posX", shaderInfo.flowers[iter].pos.x);
             shaderInfo.computeShader.SetFloat("posY", shaderInfo.flowers[iter].pos.y);
@@ -329,14 +350,10 @@ public static class Draw
 
             pointsBuffer.GetData(points);
 
-            shaderInfo.petals[iter].positionCount = shaderInfo.flowers[iter].petalPoints;
-
-            for (int j = 0; j < points.Length; j++)
-            {
-                shaderInfo.petals[iter].SetPosition(j, new(points[j].x, points[j].y));
-            }
-            pointsBuffer?.Release();
+            shaderInfo.petals[iter].positionCount = petalPoints;
+            shaderInfo.petals[iter].SetPositions(points);
         }
+        pointsBuffer?.Release();
     }
     public static void SinePetal(ComputeShader computeShader, LineRenderer renderer, Vector2 pos, int petalPoints, float amplitude = 1.0f, float petalCount = 1.0f)
     {
@@ -364,6 +381,11 @@ public static class Draw
 
         pointsBuffer.Release();
     }
+
+    public static void Line()
+    {
+
+    }
 }
 
 public static class Animation
@@ -384,12 +406,39 @@ public static class Animation
         Vector2 newPos = Vector2.Lerp(start, end, animT);
         return newPos;
     }
+    public static float CubicIn(float start, float end, float duration, float speed = 1.0f)
+    {
+        float animT = Mathf.Clamp01(speed * Time.deltaTime / duration);
+        animT = Mathf.Pow(animT, 3);
+
+        float newPos = Mathf.Lerp(start, end, animT);
+        return newPos;
+    }
+
     public static Vector2 CubicOut(Vector2 start, Vector2 end, float duration, float speed = 1.0f)
     {
         float animT = Mathf.Clamp01(speed * Time.deltaTime / duration);
         animT = 1 - Mathf.Pow(1 - animT, 3);
 
         Vector2 newPos = Vector2.Lerp(start, end, animT);
+        return newPos;
+    }
+    public static float CubicOut(float start, float end, float duration, float speed = 1.0f)
+    {
+        float animT = Mathf.Clamp01(speed * Time.deltaTime / duration);
+        animT = 1 - Mathf.Pow(1 - animT, 3);
+
+        float newPos = Mathf.Lerp(start, end, animT);
+        return newPos;
+    }
+
+    public static Vector3 CubicInOut(Vector3 start, Vector3 end, float duration, float speed = 1.0f)
+    {
+        float animT = Mathf.Clamp01(speed * Time.deltaTime / duration);
+        float a = Mathf.Round(animT);
+        animT = 4 * animT * (1 - a) + (1 - 4 * Mathf.Pow( (1 - animT), 3) ) * a;
+
+        Vector3 newPos = Vector3.Lerp(start, end, animT);
         return newPos;
     }
     public static Vector2 CubicInOut(Vector2 start, Vector2 end, float duration, float speed = 1.0f)
@@ -401,12 +450,21 @@ public static class Animation
         Vector2 newPos = Vector2.Lerp(start, end, animT);
         return newPos;
     }
+    public static float CubicInOut(float start, float end, float duration, float speed = 1.0f)
+    {
+        float animT = Mathf.Clamp01(speed * Time.deltaTime / duration);
+        float a = Mathf.Round(animT);
+        animT = 4 * animT * (1 - a) + (1 - 4 * Mathf.Pow( (1 - animT), 3) ) * a;
+
+        float newPos = Mathf.Lerp(start, end, animT);
+        return newPos;
+    }
 }
 
 
 public struct FlowerStruct
 {
-    public Vector2 pos;
+    public Vector3 pos;
     public float petalWidth, petalCount, maxPetals,  amplitude;
     public int petalPoints;
     public static int GetPetalCount()

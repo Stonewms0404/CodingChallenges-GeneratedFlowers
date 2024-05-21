@@ -9,7 +9,7 @@ public class InitializeFlower : MonoBehaviour
     public FlowerStruct flower;
     public GameObject Petals, Stem;
 
-    float petals, petalCount;
+    float petals;
     Material flowerMat, stemMat;
 
     Vector2 petalPos, petalFinalPos, stemPos, stemFinalPos = new(0, -8f);
@@ -28,8 +28,6 @@ public class InitializeFlower : MonoBehaviour
             pos = position
         };
         flower.petalWidth = flower.amplitude * 0.2f;
-
-        petalCount = flower.petalCount;
 
         stemPos = flower.pos;
         petalPos = flower.pos;
@@ -60,8 +58,6 @@ public class InitializeFlower : MonoBehaviour
     {
         LerpPetals();
         LerpStem();
-        /*if (Petals != null)
-            MovePetals();*/
     }
 
     void LerpStem()
@@ -72,7 +68,7 @@ public class InitializeFlower : MonoBehaviour
                 Destroy(Stem);
 
             stemPos = Animation.CubicInOut(stemPos, stemFinalPos, Time.deltaTime);
-            Stem = Create.Line(petalPos, stemPos, flower.petalWidth / 1.5f, stemMat);
+            Stem = Create.Line(petalPos, stemPos, flower.petalWidth / 1.5f, stemMat).gameObject;
 
             Stem.AddComponent<LayoutElement>().layoutPriority = 1;
 
@@ -97,7 +93,7 @@ public class InitializeFlower : MonoBehaviour
     {
         if ((Vector2)Petals.transform.position != petalPos)
         {
-            petalPos = Animation.CubicInOut(Petals.transform.position, petalPos +
+            petalPos = Animation.CubicInOut((Vector2)Petals.transform.position, petalPos +
                 petalFinalPos,
                 UnityEngine.Random.Range(1, 5f));
             Petals.transform.position = petalPos;
